@@ -1,6 +1,7 @@
 package org.example.service;
 
 import org.example.entities.UserInfo;
+import org.example.eventProducer.UserInfoEvent;
 import org.example.eventProducer.UserInfoProducer;
 import org.example.model.UserInfoDto;
 import org.example.repository.UserRepository;
@@ -20,6 +21,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.HashSet;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 
 @Component
@@ -49,6 +51,10 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         }
         log.info("User Authenticated Successfully..!!!");
         return new CustomUserDetails(user);
+    }
+
+    public UserInfo checkIfUserAlreadyExist(UserInfoDto userInfoDto) {
+        return userRepository.findByUsername(userInfoDto.getUsername());
     }
 
 
@@ -85,5 +91,18 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         return true;
     }
 
+    public String getUserByUsername(String userName) {
+        return Optional.of(userRepository.findByUsername(userName)).map(UserInfo::getUserId).orElse(null);
+    }
+
+    private UserInfoEvent userInfoEventToPublish(UserInfoDto userInfoDto, String userId) {
+        return UserInfoEvent.builder()
+                .userId(userId)
+                .firstName(userInfoDto.getUsername())
+                .lastName(userInfoDto.getLastName())
+                .email(userInfoDto.getEmail())
+                .phoneNumber(userInfoDto.getPhoneNumber()).build();
+
+    }
 
 }
